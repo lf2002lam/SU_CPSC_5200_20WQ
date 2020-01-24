@@ -193,5 +193,21 @@ namespace restapi.Models
         {
             return PublicJsonSerializer.SerializeObjectIndented(this);
         }
+
+        public TimecardLine ReplaceLine(string lineId, TimecardLine tcl)
+        {
+            TimecardLine annotatedLine = "";
+            for (int i = 0; i < Lines.Count; i++)
+            {
+                annotatedLine = Lines[i];
+                Lines[i] = Lines[i];
+                Lines[i].Week = tcl.Week;
+                Lines[i].Year = tcl.Year;
+                Lines[i].Day = tcl.Day;
+                Lines[i].Hours = tcl.Hours;
+                Lines[i].project = tcl.Project;
+            }
+            return annotatedLine;
+        }
     }
 }

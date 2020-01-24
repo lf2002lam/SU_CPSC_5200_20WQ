@@ -82,7 +82,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
 
-            if (timecard.CanBeDeleted() == false)
+            if (timecard.Status != TimecardStatus.Cancelled && timecard.Status != TimecardStatus.Draft)
             {
                 return StatusCode(409, new InvalidStateError() { });
             }
@@ -129,14 +129,13 @@ namespace restapi.Controllers
 
             if (timecard != null)
             {
+
                 if (timecard.Status != TimecardStatus.Draft)
                 {
                     return StatusCode(409, new InvalidStateError() { });
                 }
 
                 var annotatedLine = timecard.AddLine(documentLine);
-
-                repository.Update(timecard);
 
                 return Ok(annotatedLine);
             }
@@ -145,6 +144,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
         }
+    
 
         [HttpGet("{id:guid}/transitions")]
         [Produces(ContentTypes.Transitions)]
@@ -441,6 +441,26 @@ namespace restapi.Controllers
             {
                 return NotFound();
             }
+        }
+
+        [HttpGet("{id:guid}/lines/{lineId}")]
+        [Produces(ContentTypes.Transition)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(typeof(MissingTransitionError), 409)]
+        public IActionResult Update(Guid id, string lineId, [FromBody] TimecardLine tcl)
+        {
+            Timecard timecard = repository.Find(id);
+
+            if (timecard == null) return NotFound();
+
+            if(timecard.Status != TimecardStatus.Draft)
+            {
+                return StatusCode(409, new InvalidStateError() { });
+            }
+
+            var update = tcl.ReplaceLine(lineId, tcl);
+            return Ok(update);
         }
     }
 }
